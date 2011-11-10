@@ -1,2 +1,55 @@
-<h1>Welcome to the lost robot's home page</h1>
-<div style="position:absolute;bottom:0;">Powered by Google App Engine</div>
+<head>
+	<title>The LostRobot's Hub</title>
+	<script src="http://cdn.jquerytools.org/1.2.6/full/jquery.tools.min.js"></script>	 
+	<link rel="stylesheet" type="text/css" href="/css/scrollable-horizontal.css" />
+	<link rel="stylesheet" type="text/css" href="/css/scrollable-buttons.css" /> 
+	<link href='http://fonts.googleapis.com/css?family=VT323' rel='stylesheet' type='text/css'>
+
+</head>
+
+<body style="background-color: #000000">
+<h1 style="color:#fff">The Lost Robot</h1>
+<!-- "previous page" action -->
+<a class="prev browse left"></a>
+
+<!-- root element for scrollable -->
+<div class="scrollable">   
+   
+   <!-- root element for the items -->
+   <div class="items">
+   
+      <div>
+         <img src="/images/folder.png"/>
+         <img src="/images/blog.png" />
+       </div>
+       <div>  
+         <img src="/images/rss.png" />
+         <img src="/images/resume.png" />
+      </div>
+      <div>
+          <img src="/images/tools.png" />
+          <img src="/images/blog.png" />
+      </div>
+   </div>
+   
+</div>
+
+<!-- "next page" action -->
+<a class="next browse right"></a>
+
+
+
+<div style="position:absolute;bottom:0;color: #fff;"><p style="text-align:center;">&copy; Priyata Waje. Powered by Google App Engine | JQuery | Django | HTML5</p></div>
+<!-- javascript coding -->
+
+
+<script>
+// execute your scripts when the DOM is ready. this is mostly a good habit
+$(function() {
+
+	// initialize scrollable
+	$(".scrollable").scrollable();
+
+});
+</script>
+</body>
