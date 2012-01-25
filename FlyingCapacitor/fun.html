@@ -1,0 +1,186 @@
+<html>
+  <head>
+    <title>11/11/11</title>
+    <script type="text/javascript" src="/js/d3.min.js"></script>
+  </head>
+  <body onkeydown="onKeyDown(event)">
+    <div id="center" align="center" style="margin-top: 70px">
+      <div id="fig">
+      </div>
+    </div>
+    <script type="text/javascript">
+
+      /*
+       * If you are reading this then I have an easter egg for you:
+       * You can use your own custom image as the source, simply type in:
+       * http://thelostrobot.priyata.in/Fun?<your image url>
+       * also if you want to use a custom image and want people to guess what it is
+       * then you can type the url in base64 encoding like:
+       * http://thelostrobot.priyata.in/Fun?<your image url in base64>
+       */
+       
+      if(/msie/i.test(navigator.userAgent)) {
+        alert("Sorry, Internet Explorer is not supported, please get a modern browser like Chrome of Firefox");
+      } else {
+  
+        function avgCol(x, y, z, w) {
+          var r = (x[0] + y[0] + z[0] + w[0]) / 4;
+          var g = (x[1] + y[1] + z[1] + w[1]) / 4;
+          var b = (x[2] + y[2] + z[2] + w[2]) / 4;
+          return [Math.round(r), Math.round(g), Math.round(b)];
+        }
+
+        var x, y;
+        var size = 512,
+            duration = 300,
+            minDiam = 4;
+
+        var dim  = size / minDiam;
+
+        var colorHash = {};
+
+        var vis = d3.select("div#fig")
+          .append("svg:svg")
+            .attr("width", size)
+            .attr("height", size);
+
+        function split(x, y, d) {
+          var params = [x,y,d];
+          var cls = 'c_'+params.join('_');
+          d3.select('circle.' + cls).remove();
+
+          addCircle(2*x,   2*y,   d+1);
+          addCircle(2*x+1, 2*y,   d+1);
+          addCircle(2*x,   2*y+1, d+1);
+          addCircle(2*x+1, 2*y+1, d+1);
+        }
+
+        function addCircle(x, y, d) {
+          var params = [x,y,d];
+
+          var unit = size / Math.pow(2,d);
+          var half = unit / 2;
+          var cls = 'c_'+params.join('_');
+
+          var c = vis.append('svg:circle').attr('class', cls)
+
+          function maybeAddMouse(c) {
+            if (unit > minDiam) {
+              if (!c) c = d3.select(this);
+              c.attr('onmouseover', 'split(' + params.join(',') + ')');
+            }
+          }
+
+          if (d > 0) {
+            var xOld = Math.floor(x / 2);
+            var yOld = Math.floor(y / 2);
+            var dOld = d - 1;
+            var unitOld = size / Math.pow(2,dOld);
+            var halfOld = unitOld / 2;
+            var clsOld = 'c_'+[xOld,yOld,dOld].join('_');
+
+            c = c.attr('cx', unitOld * xOld + halfOld)
+                 .attr('cy', unitOld * yOld + halfOld)
+                 .attr('r', halfOld)
+                 .attr('fill', 'rgb(' + colorHash[clsOld].join(',') + ')')
+                 .attr('fill-opacity', .68)
+               .transition().duration(duration)
+          }
+
+          c.attr('cx', unit * x + half)
+           .attr('cy', unit * y + half)
+           .attr('r', half)
+           .attr('fill', 'rgb(' + colorHash[cls].join(',') + ')')
+           .attr('fill-opacity', 1);
+  
+          if (d > 0) {
+            c.each("end", maybeAddMouse);
+          } else {
+            maybeAddMouse(c);
+          }
+        }
+
+        function initCircles() {
+          var context = document.createElement('canvas').getContext('2d');
+          try {
+            context.drawImage(this, 0, 0, dim, dim);
+            data = context.getImageData(0, 0, dim, dim).data;
+          } catch(e) {
+            alert("Failed to load image.");
+          }
+          var depth = Math.round(Math.log(dim) / Math.log(2));
+  
+          var t = 0;
+          for (y = 0; y < dim; y++) {
+            for (x = 0; x < dim; x++) {
+              var col = [data[t], data[t+1], data[t+2]];
+              colorHash['c_' + [x,y,depth].join('_')] = col;
+              t += 4;
+            }
+          }
+          do {
+            dim = dim / 2;
+            depth = depth - 1;
+            for (y = 0; y < dim; y++) {
+              for (x = 0; x < dim; x++) {
+                colorHash['c_' + [x,y,depth].join('_')] = avgCol(
+                    colorHash['c_' + [2*x  ,2*y  ,depth+1].join('_')],
+                    colorHash['c_' + [2*x+1,2*y  ,depth+1].join('_')],
+                    colorHash['c_' + [2*x  ,2*y+1,depth+1].join('_')],
+                    colorHash['c_' + [2*x+1,2*y+1,depth+1].join('_')]
+                  );
+              }
+            }
+          } while(dim > 1)
+  
+          addCircle(0, 0, 0);
+        }
+
+        // Start slow opening on bubbles
+        var interval;
+        function onKeyDown(e) {
+          if(e.which === 32) {
+            if (interval) {
+              clearInterval(interval);
+              interval = null;
+            } else {
+              interval = setInterval(function() {
+                var expandable = vis.selectAll("circle")
+                  .filter(function() { return d3.select(this).attr('onmouseover'); })[0];
+
+                if (expandable.length > 0) {
+                  var ex = expandable[Math.floor(Math.random() * expandable.length)];
+                  eval(d3.select(ex).attr('onmouseover'));
+                } else {
+                  clearInterval(interval);
+                  interval = null;
+                }
+              }, 150);
+            }
+          }
+        }
+
+        var hrefSplit = window.location.href.split("?", 2);
+        var domian = hrefSplit[0];
+        var file = hrefSplit[1];
+        if (file) {
+          if (file.match(/^[a-z0-9+\/=]+$/i)) {
+            file = atob(file);
+          } else {
+            // Hide the link in the url
+            window.location.href = domian + '?' + btoa(file);
+          }
+        } else {
+          file = '/images/hb.jpg';
+        } 
+        // using image proxy
+        if (file.substring(0, 5) === 'http:') {
+          file = "image?u=" + file;
+        }
+        var img = new Image();
+        img.onload = initCircles;
+        img.src = file;
+      }
+    </script>
+  </body>
+</html>
